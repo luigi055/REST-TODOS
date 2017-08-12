@@ -24,6 +24,16 @@ app.post('/todos', (req, res) => {
   });
 });
 
+app.get('/todos', (req, res) => {
+  Todo.find().then(todos => {
+    res.send({
+      todos,
+    });
+  }, err => {
+    res.status(400).send(err);
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`successfully connected on port ${PORT}`);
 });
