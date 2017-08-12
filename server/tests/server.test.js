@@ -71,13 +71,14 @@ describe('GET /todos', () => {
       .expect(res => {
         expect(res.body.todos).to.have.lengthOf(2);
       })
-      .end((err, res) => {
-        if (err) return done(err);
+      .end(done)
+    // .end((err, res) => {
+    //   if (err) return done(err);
 
-        Todo.find().then(todos => {
-          expect(todos).to.be.an('array').that.have.lengthOf(2);
-          done();
-        }).catch(err => done(err));
-      });
+    //   Todo.find().then(todos => {
+    //     expect(todos).to.be.an('array').that.have.lengthOf(2);
+    //     done();
+    //   }).catch(err => done(err));
+    // });
   });
 });
