@@ -27,3 +27,7 @@ app.post('/todos', (req, res) => {
 app.listen(PORT, () => {
   console.log(`successfully connected on port ${PORT}`);
 });
+
+module.exports = {
+  app
+};
