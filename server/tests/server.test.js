@@ -82,3 +82,14 @@ describe('GET /todos', () => {
     // });
   });
 });
+
+describe('GET /todos/:todo', () => {
+  it('should get error if ID not found', done => {})
+  it('should get todo', done => {
+
+  })
+  it('should get error if ID is invalid', done => {
+
+  })
+
+});
