@@ -15,6 +15,8 @@ const todos = [{
 }, {
   _id: new ObjectID(),
   text: 'Second test todo',
+  completed: true,
+  completedAt: 333,
 }]
 
 beforeEach(done => {
@@ -161,4 +163,41 @@ describe('DELETE /todos/:id', () => {
       })
       .end(done);
   })
+});
+
+describe('PATCH /todos/:id', () => {
+  it('should update the first todo and toggle to true', done => {
+    const hexId = todos[0]._id.toHexString();
+    request(app)
+      .patch(`/todos/${hexId}`)
+      .send({
+        text: 'update from mocha test',
+        completed: true,
+      })
+      .expect(200)
+      .expect(res => {
+        expect(res.body.todo._id).is.equal(hexId);
+        expect(res.body.todo.text).is.a('string').that.is.equal('update from mocha test');
+        expect(res.body.todo.completedAt).is.a('number');
+        expect(res.body.todo.completed).is.true;
+      })
+      .end(done)
+  });
+
+  it('should update the second todo and toggle it to false', done => {
+    const hexId = todos[1]._id.toHexString();
+    request(app)
+      .patch(`/todos/${hexId}`)
+      .send({
+        text: 'Be confident on doing TDD',
+        completed: false,
+      })
+      .expect(200)
+      .expect(res => {
+        expect(res.body.todo.text).is.a('string').that.is.equal('Be confident on doing TDD');
+        expect(res.body.todo.completedAt).to.be.null;
+        expect(res.body.todo.completed).is.false;
+      })
+      .end(done)
+  });
 });
