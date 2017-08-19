@@ -138,6 +138,32 @@ app.patch('/todos/:id', (req, res) => {
 
 });
 
+
+
+app.post('/users', (req, res) => {
+  const {
+    body,
+  } = req;
+
+  const user = new User(body);
+  user.save().then(() => {
+
+    // res.send(user); 
+    // Instead of just show the user with express
+    // we're going to process the email and password
+    // and auto generate a hashed token using the function that
+    // Was created in the User Schema
+    return user.generateAuthToken();
+    // This return the token value that we're going to 
+    // use in the next then chain
+  }).then((token) => {
+    // we're going to pass a variable in the header (a custom header) of the server
+    res.header('x-auth', token).send(user); // now here we send the user
+  }).catch(err => {
+    res.status(400).send(err);
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`successfully connected on port ${PORT}`);
 });

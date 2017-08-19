@@ -7,6 +7,7 @@ const {
   app
 } = require('./../server');
 const Todo = require('./../models/todo');
+const User = require('./../models/user');
 
 // Dummy todos (SEED DATA)
 const todos = [{
@@ -27,6 +28,9 @@ beforeEach(done => {
   }).then(() => done());
 });
 
+beforeEach(done => {
+  User.remove({}).then(() => done());
+})
 describe('POST / todos', () => {
   it('should create a new todo', done => {
     const text = 'Test todo text';
@@ -199,5 +203,48 @@ describe('PATCH /todos/:id', () => {
         expect(res.body.todo.completed).is.false;
       })
       .end(done)
+  });
+});
+
+describe('POST /users', () => {
+  it('should add a new user', done => {
+    const user = {
+      email: 'test@email.com',
+      password: '123abc',
+    }
+    request(app)
+      .post('/users')
+      .send(user)
+      .expect(200)
+      .expect(res => {
+        expect(res.body.email).to.be.equal(user.email);
+        expect(res.body.password).to.be.equal(user.password);
+      })
+      .end((err, res) => {
+        if (err) return done(err);
+
+        User.find({
+          email: user.email,
+        }).then(userDoc => {
+          expect(userDoc).to.be.an('array');
+          expect(userDoc[0]._id).to.exist;
+          expect(userDoc[0].email).to.be.equal(user.email)
+          done()
+        }).catch(err => done(err));
+      });
+  });
+
+  it('should get error if duplicated user', done => {
+    const user = {
+      email: 'test@email.com',
+      password: '123abc',
+    }
+    const userdb = new User(user);
+    userdb.save()
+    request(app)
+      .post('/users')
+      .send(user)
+      .expect(400)
+      .end(done);
   });
 });

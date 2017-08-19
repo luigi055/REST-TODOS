@@ -1,19 +1,89 @@
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const {
+  isEmail
+} = require('validator');
 
-// user model
-const User = mongoose.model('User', {
+// {
+//   email: 'luigi5021@gmail.com',
+//   password: '52ar5a74g',
+//   tokens: [{
+//     access: 'auth',
+//     token: '51rg651g6we51gew54rg1we',
+//   }],
+// }
+
+const UserSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
     trim: true,
     minlength: 1,
+    unique: true,
+    // validate: { // You could use this method of validation
+    //   validator(value) {
+    //     // expect to return a boolean
+    //       return isEmail(value);
+    //     }
+    //   },
+    validate: isEmail,
+    message: '{VALUE} is not a valid email',
   },
   password: {
     type: String,
     required: true,
     trim: true,
-    minlength: 1
+    minlength: 6,
   },
+  tokens: [{
+    access: {
+      type: String,
+      required: true,
+    },
+    token: {
+      type: String,
+      required: true,
+    },
+  }],
 });
+
+// This is the mongoose inner method that transform any of our 
+// Object we sent with express before get saved to mongodb 
+UserSchema.methods.toJSON = function () {
+  const user = this;
+  const userObject = user.toObject();
+  const {
+    _id,
+    email
+  } = userObject;
+  // we need to hide tokens and password before send our
+  // Respond with express
+  return {
+    _id,
+    email,
+  };
+}
+
+UserSchema.methods.generateAuthToken = function () {
+  const user = this;
+  const access = 'auth';
+  const token = jwt.sign({
+    _id: user._id.toHexString(),
+    access,
+  }, 'abc123').toString();
+
+  // we push this property inside the tokens array to each new user document
+  user.tokens.push({
+    access,
+    token,
+  });
+
+  return user.save().then(() => {
+    return token;
+  });
+}
+
+// user model
+const User = mongoose.model('User', UserSchema);
 
 module.exports = User;
