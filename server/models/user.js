@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const {
   isEmail
 } = require('validator');
@@ -83,7 +84,7 @@ UserSchema.methods.generateAuthToken = function () {
   });
 }
 
-// Creating a middleare to get token before get any todo
+// Creating a static to get token before get any todo
 UserSchema.statics.findByToken = function (token) {
   var User = this;
   var decoded;
@@ -105,7 +106,30 @@ UserSchema.statics.findByToken = function (token) {
   });
 }
 
+
+// Before the document will save we'll use a middleware
 // user model
+
+UserSchema.pre('save', function (next) {
+  const user = this;
+  // check if the password was modified
+  // will use a built in method from pre
+  if (user.isModified('password')) {
+    bcrypt.genSalt(10, (err, salt) => {
+      // Hashing password
+      bcrypt.hash(user.password, salt, (err, hash) => {
+        if (bcrypt.compare(user.password, hash)) {
+          user.password = hash;
+          next();
+        }
+      });
+    });
+  } else {
+    // if not modified go next 
+    next();
+  }
+});
+
 const User = mongoose.model('User', UserSchema);
 
 module.exports = User;

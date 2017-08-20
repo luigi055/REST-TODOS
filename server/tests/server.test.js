@@ -31,7 +31,7 @@ beforeEach(done => {
 beforeEach(done => {
   User.remove({}).then(() => done());
 })
-describe('POST / todos', () => {
+describe('POST /todos', () => {
   it('should create a new todo', done => {
     const text = 'Test todo text';
     request(app)
