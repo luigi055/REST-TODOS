@@ -10,6 +10,8 @@ const {
 const mongoose = require('./db/mongoose');
 const Todo = require('./models/todo');
 const User = require('./models/user');
+const authenticate = require('./middleware/authenticate');
+
 
 const app = express();
 const PORT = process.env.PORT;
@@ -138,7 +140,9 @@ app.patch('/todos/:id', (req, res) => {
 
 });
 
-
+// =========================================
+// /////////////USERS ROUTES////////////////
+// =========================================
 
 app.post('/users', (req, res) => {
   const {
@@ -162,6 +166,11 @@ app.post('/users', (req, res) => {
   }).catch(err => {
     res.status(400).send(err);
   });
+});
+
+
+app.get('/users/me', authenticate, (req, res) => {
+  res.send(req.user);
 });
 
 app.listen(PORT, () => {

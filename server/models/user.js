@@ -83,6 +83,28 @@ UserSchema.methods.generateAuthToken = function () {
   });
 }
 
+// Creating a middleare to get token before get any todo
+UserSchema.statics.findByToken = function (token) {
+  var User = this;
+  var decoded;
+
+  try {
+    decoded = jwt.verify(token, 'abc123');
+  } catch (err) {
+    // Reject the promise
+    // return new Promise((resolve, reject) => {
+    //   reject();
+    // });
+    // or better like this (the same thing)
+    return Promise.reject();
+  }
+  return User.findOne({
+    '_id': decoded._id,
+    'tokens.token': token,
+    'tokens.access': 'auth',
+  });
+}
+
 // user model
 const User = mongoose.model('User', UserSchema);
 
