@@ -1,5 +1,6 @@
 const expect = require('chai').expect;
 const request = require('supertest');
+const bcrypt = require('bcryptjs');
 const {
   ObjectID
 } = require('mongodb');
@@ -8,29 +9,26 @@ const {
 } = require('./../server');
 const Todo = require('./../models/todo');
 const User = require('./../models/user');
+const {
+  todos,
+  users,
+  populateTodos,
+  populateUsers,
+} = require('./seed/seed');
 
-// Dummy todos (SEED DATA)
-const todos = [{
-  _id: new ObjectID(),
-  text: 'First test todo',
-}, {
-  _id: new ObjectID(),
-  text: 'Second test todo',
-  completed: true,
-  completedAt: 333,
-}]
 
-beforeEach(done => {
-  // This removes all the document todos in the collection 
-  // before each 'it' case
-  Todo.remove({}).then(() => {
-    return Todo.insertMany(todos);
-  }).then(() => done());
-});
 
-beforeEach(done => {
-  User.remove({}).then(() => done());
-})
+beforeEach(populateUsers)
+// beforeEach(done => {
+//   // This removes all the document todos in the collection 
+//   // before each 'it' case
+//   populateTodos(done);
+
+// });
+// Or just
+beforeEach(populateTodos);
+
+
 describe('POST /todos', () => {
   it('should create a new todo', done => {
     const text = 'Test todo text';
@@ -206,45 +204,85 @@ describe('PATCH /todos/:id', () => {
   });
 });
 
-describe('POST /users', () => {
-  it('should add a new user', done => {
-    const user = {
-      email: 'test@email.com',
-      password: '123abc',
-    }
+describe('GET /users/me', () => {
+  it('should return user if authenticated', done => {
     request(app)
-      .post('/users')
-      .send(user)
+      .get('/users/me')
+      .set('x-auth', users[0].tokens[0].token) // Set header
       .expect(200)
       .expect(res => {
-        expect(res.body.email).to.be.equal(user.email);
-        expect(res.body.password).to.be.equal(user.password);
+        expect(res.body._id).to.be.equal(users[0]._id.toHexString());
+        expect(res.body.email).to.be.equal(users[0].email);
       })
-      .end((err, res) => {
-        if (err) return done(err);
-
-        User.find({
-          email: user.email,
-        }).then(userDoc => {
-          expect(userDoc).to.be.an('array');
-          expect(userDoc[0]._id).to.exist;
-          expect(userDoc[0].email).to.be.equal(user.email)
-          done()
-        }).catch(err => done(err));
-      });
+      .end(done);
   });
 
-  it('should get error if duplicated user', done => {
-    const user = {
-      email: 'test@email.com',
-      password: '123abc',
-    }
-    const userdb = new User(user);
-    userdb.save()
+  it('should return 401 if not authenticated', done => {
+    request(app)
+      .get('/users/me')
+      .expect(401)
+      .expect(res => {
+        expect(res.body).to.be.empty;
+      })
+      .end(done);
+  })
+});
+
+describe('POST /users', () => {
+  it('should create a user', done => {
+    const email = 'test1@gmail.com';
+    const password = '123abc!';
     request(app)
       .post('/users')
-      .send(user)
+      .send({
+        email,
+        password
+      })
+      .expect(200)
+      .expect(res => {
+        expect(res.headers['x-auth']).to.exist;
+        expect(res.body._id).to.be.a('string').that.exist;
+        expect(res.body.email).to.be.equal(email);
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        User.findOne({
+          email,
+        }).then(user => {
+          expect(user).to.exist;
+          expect(user.password).to.not.equal(password);
+          bcrypt.compare(password, user.password, (err, userPw) => {
+            expect(userPw).to.be.a('boolean').that.is.true;
+            done();
+          });
+        }).catch(err => done(err));
+      })
+  });
+
+  it('should return validation errors if request invalid', done => {
+    const email = 'test1';
+    const password = '123a';
+    request(app)
+      .post('/users')
+      .send({
+        email,
+        password,
+      })
       .expect(400)
       .end(done);
   });
-});
+
+  it('it should not create user if email in use', done => {
+
+    request(app)
+      .post('/users')
+      .send({
+        email: users[0].email,
+        password: users[0].password,
+      })
+      .expect(400)
+      .end(done);
+  });
+})
