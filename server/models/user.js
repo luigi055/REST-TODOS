@@ -84,6 +84,19 @@ UserSchema.methods.generateAuthToken = function () {
   });
 }
 
+UserSchema.methods.removeToken = function (token) {
+  const user = this;
+  // $pull remove propeties from arrays
+  return user.update({
+    $pull: {
+      tokens: {
+        token, // removed all tokens if  parameter is passed in empty
+      }
+    }
+  });
+
+}
+
 // Creating a static to get token before get any todo
 UserSchema.statics.findByToken = function (token) {
   var User = this;
