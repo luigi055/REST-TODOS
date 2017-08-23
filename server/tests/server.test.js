@@ -286,3 +286,29 @@ describe('POST /users', () => {
       .end(done);
   });
 });
+
+describe('DELETE /users/me/token', () => {
+  it('should remove auth token on logout', done => {
+    request(app)
+      .delete('/users/me/token')
+      .set('x-auth', users[0].tokens[0].token)
+      .expect(200)
+      .expect(res => {
+        expect(res.header['x-auth']).to.not.exist;
+      })
+      .end((err, res) => {
+        if (err) return done(err);
+        User.findById(users[0]._id).then(user => {
+          expect(user.tokens).to.be.an('array').that.is.empty;
+          done();
+        }).catch(err => done(err));
+      });
+  });
+
+  it('should throw 401 error if not x-auth', done => {
+    request(app)
+      .delete('/users/me/token')
+      .expect(401)
+      .end(done);
+  });
+});
