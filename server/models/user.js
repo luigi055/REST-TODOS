@@ -119,6 +119,32 @@ UserSchema.statics.findByToken = function (token) {
   });
 }
 
+UserSchema.statics.findByCredentials = function (email, password) {
+  const User = this;
+
+  // chaining the promise
+  return User.findOne({
+    email
+  }).then(user => {
+    if (!user) {
+      return Promise.reject(); // activate .catch()
+    }
+
+    // since bcrypt only support callback functions and we want to use promises
+    // we're going to wrap that bcrypt with a new promise
+    return new Promise((resolve, reject) => {
+      // Use bcrypt.compare to comprare password with user-password
+      bcrypt.compare(password, user.password, (err, res) => {
+        if (res) {
+          resolve(user);
+        } else {
+          reject(err);
+        }
+      });
+    })
+  });
+}
+
 
 // Before the document will save we'll use a middleware
 // user model

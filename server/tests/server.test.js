@@ -34,6 +34,7 @@ describe('POST /todos', () => {
     const text = 'Test todo text';
     request(app)
       .post('/todos')
+      .set('x-auth', users[0].tokens[0].token)
       .send({
         text,
       })
@@ -59,6 +60,7 @@ describe('POST /todos', () => {
   it('should not creat todo with invalid body data', done => {
     request(app)
       .post('/todos')
+      .set('x-auth', users[0].tokens[0].token)
       .send({})
       .expect(400)
       .end((err, res) => {
@@ -76,15 +78,19 @@ describe('GET /todos', () => {
   it('should get all todos created', done => {
     request(app)
       .get('/todos')
+      .set('x-auth', users[0].tokens[0].token)
       .expect(200)
       .expect(res => {
-        expect(res.body.todos).to.have.lengthOf(2);
+        // just one todo created with this id
+        expect(res.body.todos).to.have.lengthOf(1);
       })
       .end((err, res) => {
         if (err) return done(err);
 
-        Todo.find().then(todos => {
-          expect(todos).to.be.an('array').that.have.lengthOf(2);
+        Todo.find({
+          _creator: users[0]._id,
+        }).then(todos => {
+          expect(todos).to.be.an('array').that.have.lengthOf(1);
           done();
         }).catch(err => done(err));
       });

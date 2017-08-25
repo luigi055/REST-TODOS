@@ -5,16 +5,21 @@ const Todo = require('./../../models/todo');
 const User = require('./../../models/user');
 const jwt = require('jsonwebtoken');
 
+// Dummy users (SEED DATA)
+const userOneId = new ObjectID();
+const userTwoId = new ObjectID();
 
 // Dummy todos (SEED DATA)
 const todos = [{
   _id: new ObjectID(),
   text: 'First test todo',
+  _creator: userOneId,
 }, {
   _id: new ObjectID(),
   text: 'Second test todo',
   completed: true,
   completedAt: 333,
+  _creator: userTwoId,
 }];
 
 const populateTodos = done => {
@@ -22,9 +27,6 @@ const populateTodos = done => {
     return Todo.insertMany(todos);
   }).then(() => done());
 };
-// Dummy users (SEED DATA)
-const userOneId = new ObjectID();
-const userTwoId = new ObjectID();
 
 const users = [{
   _id: userOneId,
@@ -41,6 +43,13 @@ const users = [{
   _id: userTwoId,
   email: 'test2@email.com',
   password: '123456',
+  tokens: [{
+    access: 'auth',
+    token: jwt.sign({
+      _id: userTwoId,
+      access: 'auth',
+    }, 'abc123').toString(),
+  }]
 
 }];
 
