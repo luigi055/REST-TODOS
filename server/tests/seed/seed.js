@@ -43,14 +43,6 @@ const users = [{
   _id: userTwoId,
   email: 'test2@email.com',
   password: '123456',
-  tokens: [{
-    access: 'auth',
-    token: jwt.sign({
-      _id: userTwoId,
-      access: 'auth',
-    }, 'abc123').toString(),
-  }]
-
 }];
 
 const populateUsers = (done => {
