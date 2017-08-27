@@ -5,6 +5,7 @@ const {
   isEmail
 } = require('validator');
 
+
 // {
 //   email: 'luigi5021@gmail.com',
 //   password: '52ar5a74g',
@@ -71,7 +72,7 @@ UserSchema.methods.generateAuthToken = function () {
   const token = jwt.sign({
     _id: user._id.toHexString(),
     access,
-  }, 'abc123').toString();
+  }, process.env.JWT_SECRET).toString();
 
   // we push this property inside the tokens array to each new user document
   user.tokens.push({
@@ -103,7 +104,7 @@ UserSchema.statics.findByToken = function (token) {
   var decoded;
 
   try {
-    decoded = jwt.verify(token, 'abc123');
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch (err) {
     // Reject the promise
     // return new Promise((resolve, reject) => {
