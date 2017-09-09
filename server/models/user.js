@@ -5,16 +5,6 @@ const {
   isEmail
 } = require('validator');
 
-
-// {
-//   email: 'luigi5021@gmail.com',
-//   password: '52ar5a74g',
-//   tokens: [{
-//     access: 'auth',
-//     token: '51rg651g6we51gew54rg1we',
-//   }],
-// }
-
 const UserSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -132,7 +122,7 @@ UserSchema.statics.findByCredentials = function (email, password) {
     }
 
     // since bcrypt only support callback functions and we want to use promises
-    // we're going to wrap that bcrypt with a new promise
+    // we're going to wrap that bcrypt with a new promise 
     return new Promise((resolve, reject) => {
       // Use bcrypt.compare to comprare password with user-password
       bcrypt.compare(password, user.password, (err, res) => {
@@ -142,7 +132,7 @@ UserSchema.statics.findByCredentials = function (email, password) {
           reject(err);
         }
       });
-    })
+    });
   });
 }
 
